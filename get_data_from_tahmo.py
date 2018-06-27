@@ -9,6 +9,9 @@ import datetime
 import time
 import dateutil.parser as dp
 import ConfigParser
+import sys
+
+
 
 config = ConfigParser.ConfigParser()
 config.readfp(open(r'config.cfg'))
@@ -21,6 +24,7 @@ base_url = "https://tahmoapi.mybluemix.net/v1/timeseries/"
 
 stationNames = []
 firstReading = []
+lastReading = []
 stationId = []
 combined = {}
 
@@ -46,8 +50,10 @@ def readStationFile(stationFile):
             stationId.append(str.strip(line))
         elif count == 2:
             stationNames.append(str.strip(line))
-        else:
+        elif count == 3:
             firstReading.append(str.strip(line))
+        else:
+            lastReading.append(str.strip(line))
             count = 0
     return
 # Function to request data from API
@@ -108,16 +114,21 @@ def requestData(stationId, startDate, endDate, count):
 readStationFile('stations_test.txt')
 count = 0
 attempt = 0
-#print "NOTE ALL TIMES ARR IN UTC"
 for station in stationNames:
     log_file = "retreval.log"
     log = open(log_file, "w+")
-    ctime = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
-    lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
+
     startDate = datetime.datetime.strptime(firstReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
+    # SET LAST DATE TO GET TO CURRENT DATE
+    # ctime = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    # HACK TO ONLY GET THREE DAYS DATA
+    lastReading = startDate + datetime.timedelta(days=3)
+    ctime = startDate + datetime.timedelta(days=1)
+    #lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
     print "Getting data for ",stationNames[count],
+    sys.stdout.flush()
     while startDate < lastReading:
-        delta = datetime.timedelta(days=7)
+        delta = datetime.timedelta(days=1)
         endDate = startDate + delta
         if endDate > lastReading:
             endDate = lastReading
@@ -129,6 +140,7 @@ for station in stationNames:
         #print "PARAMS: ", params
         #print "FILENAME: ", filename
         print'.',
+        sys.stdout.flush()
         data = apiRequest(url,params)
         #print json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w') as outfile:
