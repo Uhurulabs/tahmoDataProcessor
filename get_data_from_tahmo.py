@@ -105,7 +105,7 @@ def requestData(stationId, startDate, endDate, count):
             print "Could not process variable ", variable
 
 
-readStationFile('stations.txt')
+readStationFile('stations_test.txt')
 count = 0
 attempt = 0
 #print "NOTE ALL TIMES ARR IN UTC"
