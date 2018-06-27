@@ -8,8 +8,12 @@ import os
 import datetime
 import time
 import dateutil.parser as dp
+import ConfigParser
 
-
+config = ConfigParser.ConfigParser()
+config.readfp(open(r'config.cfg'))
+API_ID = config.get('API-CREDS', 'API_ID')
+API_SECRET = config.get('API-CREDS', 'API_SECRET')
 
 
 authKey = base64.encodestring('%s:%s' % (API_ID, API_SECRET)).replace('\n', '')
