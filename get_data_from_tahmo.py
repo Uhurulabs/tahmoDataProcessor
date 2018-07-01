@@ -134,7 +134,6 @@ for station in stationNames:
         endDate = startDate + delta
         if endDate > lastReading:
             endDate = lastReading
-        print "Getting :", startDate,
         url = base_url + stationId[count] + "/"
         params = {'startDate': startDate.strftime(
             "%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}
@@ -143,16 +142,16 @@ for station in stationNames:
         #print "URL: ", url
         #print "PARAMS: ", params
         #print "FILENAME: ", filename
-        print'.',
+        print "Getting :", startDate, params,
+        print'.'
         sys.stdout.flush()
         data = apiRequest(url, params)
         #print json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w') as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4,
                       ensure_ascii=False)
-        logLine = "Witten :" + filename + "\n "
+        logLine = "Written :" + filename + "\n"
         log.write(logLine)
-        # Make sure we dont read the last date again
-        startDate = endDate + datetime.timedelta(days=1)
+        startDate = endDate
     count = count + 1
     log.close()
