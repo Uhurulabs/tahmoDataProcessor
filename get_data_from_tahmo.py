@@ -115,14 +115,15 @@ readStationFile('stations_test.txt')
 count = 0
 attempt = 0
 for station in stationNames:
-    log_file = "retreval.log"
+    log_file = stationId[count] + "-retreval.log"
     log = open(log_file, "w+")
 
     startDate = datetime.datetime.strptime(firstReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
+    lastReading = datetime.datetime.strptime(lastReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
     # SET LAST DATE TO GET TO CURRENT DATE
     # ctime = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
     # HACK TO ONLY GET THREE DAYS DATA
-    lastReading = startDate + datetime.timedelta(days=3)
+    #lastReading = startDate + datetime.timedelta(days=3)
     ctime = startDate + datetime.timedelta(days=1)
     #lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
     print "Getting data for ", stationNames[count]
