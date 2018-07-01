@@ -2,3 +2,4 @@ credentials.txt
 config.cfg
 test.py
 *.json
+*.log

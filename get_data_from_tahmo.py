@@ -12,7 +12,6 @@ import ConfigParser
 import sys
 
 
-
 config = ConfigParser.ConfigParser()
 config.readfp(open(r'config.cfg'))
 API_ID = config.get('API-CREDS', 'API_ID')
@@ -30,8 +29,6 @@ combined = {}
 
 # Generate base64 encoded authorization string
 basicAuthString = base64.encodestring('%s:%s' % (API_ID, API_SECRET)).replace('\n', '')
-
-
 
 
 def convertToUnixTimeStamp(date):
@@ -57,6 +54,8 @@ def readStationFile(stationFile):
             count = 0
     return
 # Function to request data from API
+
+
 def apiRequest(url, params={}):
     encodedParams = urllib.urlencode(params)
     try:
@@ -88,6 +87,7 @@ def apiRequest(url, params={}):
         else:
             print err
             quit()
+
 
 def requestData(stationId, startDate, endDate, count):
     # Request timeseries for specific station
@@ -125,29 +125,33 @@ for station in stationNames:
     lastReading = startDate + datetime.timedelta(days=3)
     ctime = startDate + datetime.timedelta(days=1)
     #lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
-    print "Getting data for ",stationNames[count],
+    print "Getting data for ", stationNames[count]
+    print "Start date :", startDate
+    print "Last date :", lastReading
     sys.stdout.flush()
     while startDate < lastReading:
         delta = datetime.timedelta(days=1)
         endDate = startDate + delta
         if endDate > lastReading:
             endDate = lastReading
-
+        print "Getting :", startDate,
         url = base_url + stationId[count] + "/"
-        params = {'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}
-        filename = stationId[count] + "_" + startDate.strftime("%Y-%m-%d") + "-" + endDate.strftime("%Y-%m-%d") + ".json"
+        params = {'startDate': startDate.strftime(
+            "%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}
+        filename = stationId[count] + "_" + \
+            startDate.strftime("%Y-%m-%d") + "-" + endDate.strftime("%Y-%m-%d") + ".json"
         #print "URL: ", url
         #print "PARAMS: ", params
         #print "FILENAME: ", filename
         print'.',
         sys.stdout.flush()
-        data = apiRequest(url,params)
+        data = apiRequest(url, params)
         #print json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w') as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4,
                       ensure_ascii=False)
-
-        log.write(stationId[count] + "_" + startDate.strftime("%Y-%m-%d") + "-" + endDate.strftime("%Y-%m-%d"))
+        logLine = "Witten :" + filename + "\n "
+        log.write(logLine)
         # Make sure we dont read the last date again
         startDate = endDate + datetime.timedelta(days=1)
     count = count + 1
