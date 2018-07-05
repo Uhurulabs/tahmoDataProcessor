@@ -10,6 +10,7 @@ import dateutil.parser as dp
 import ConfigParser
 import sys
 import MySQLdb as my
+import Geohash
 
 
 config = ConfigParser.ConfigParser()
@@ -100,11 +101,12 @@ for key in data["stations"]:
     tahmoId = str(key.get("id"))
     deviceId = str(key.get("deviceId"))
     first = convertToUnixTimeStamp(firstMeasurement)
-    print tahmoId, deviceId, name, lng, lat, elevation, battery, firstMeasurement, first, lastMeasurement
-    sqlCommand = "INSERT INTO weatherstations (tahmoId, name, longitude, latitude, elevation, battery, deviceId, firstMeasurement, lastMeasurement) \
-            VALUES ('" + tahmoId + "','" + name + "','" + lng + "','" + lat + "','" + elevation + "','" + battery + "','" + deviceId + "','" + firstMeasurement + "','" + lastMeasurement + "')"
+    gHash = Geohash.encode((key["location"].get("lat")),(key["location"].get("lng")), precision=10)
+    #print tahmoId, deviceId, name, lng, lat, elevation, battery, firstMeasurement, first, lastMeasurement, gHash
+    sqlCommand = "INSERT INTO weatherstations (tahmoId, name, longitude, latitude, elevation, battery, deviceId, firstMeasurement, lastMeasurement, geohash) \
+            VALUES ('" + tahmoId + "','" + name + "','" + lng + "','" + lat + "','" + elevation + "','" + battery + "','" + deviceId + "','" + firstMeasurement + "','" + lastMeasurement + "','" + gHash + "')"
     print sqlCommand
-    
+
     try:
        cursor.execute(sqlCommand)
        sqlConnection.commit()
