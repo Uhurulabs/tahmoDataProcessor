@@ -9,6 +9,7 @@ import time
 import dateutil.parser as dp
 import ConfigParser
 import sys
+import MySQLdb as my
 
 
 config = ConfigParser.ConfigParser()
@@ -57,6 +58,11 @@ def apiRequest(url, params={}):
             print err
             quit()
 
+def convertToUnixTimeStamp(date):
+    t = date
+    parsed_t = dp.parse(t)
+    unixTimeStamp = parsed_t.strftime('%s')
+    return unixTimeStamp
 
 #response = apiRequest(url)
 #with open(stationFile, 'w') as outfile:
@@ -69,3 +75,40 @@ with open(stationFile) as f:
 del data["status"]
 print "Length :",len(data)
 print "Keys: ", data.keys()
+#print "Keys: ", data["stations"].keys()
+
+
+sqlConnection = my.connect(host= "amina.uhurulabs.org",
+                  user="root",
+                  passwd="",
+                  db="sensors")
+cursor = sqlConnection.cursor()
+
+
+
+
+
+for key in data["stations"]:
+    elevation = str(key.get("elevation"))
+    name = str(key.get("name"))
+    lng = str(key["location"].get("lng"))
+    lat = str(key["location"].get("lat"))
+    lastMeasurement = str(key.get("lastMeasurement"))
+    firstMeasurement = str(key.get("firstMeasurement"))
+    timezoneOffset = str(key.get("timezoneOffset"))
+    battery = str(key.get("battery"))
+    tahmoId = str(key.get("id"))
+    deviceId = str(key.get("deviceId"))
+    first = convertToUnixTimeStamp(firstMeasurement)
+    print tahmoId, deviceId, name, lng, lat, elevation, battery, firstMeasurement, first, lastMeasurement
+    sqlCommand = "INSERT INTO weatherstations (tahmoId, name, longitude, latitude, elevation, battery, deviceId, firstMeasurement, lastMeasurement) \
+            VALUES ('" + tahmoId + "','" + name + "','" + lng + "','" + lat + "','" + elevation + "','" + battery + "','" + deviceId + "','" + firstMeasurement + "','" + lastMeasurement + "')"
+    print sqlCommand
+    
+    try:
+       cursor.execute(sqlCommand)
+       sqlConnection.commit()
+    except my.Error as e:
+        print e
+        sqlConnection.rollback()
+sqlConnection.close ()

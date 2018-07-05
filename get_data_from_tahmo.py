@@ -147,6 +147,8 @@ for station in stationNames:
         print'.'
         sys.stdout.flush()
         data = apiRequest(url, params)
+        # Remove HTTP Status Key
+        del data["status"]
         #print json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w') as outfile:
             json.dump(data, outfile, sort_keys=True, indent=4,
