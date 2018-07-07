@@ -10,6 +10,8 @@ import time
 import dateutil.parser as dp
 import ConfigParser
 import sys
+from datetime import datetime
+import pytz
 
 
 config = ConfigParser.ConfigParser()
@@ -110,51 +112,80 @@ def requestData(stationId, startDate, endDate, count):
         except:
             print "Could not process variable ", variable
 
+def getBulkHistoricalData():
+    readStationFile('stations_test.txt')
+    count = 0
+    attempt = 0
+    for station in stationNames:
+        log_file = stationId[count] + "-retreval.log"
+        log = open(log_file, "w+")
 
-readStationFile('stations_test.txt')
-count = 0
-attempt = 0
-for station in stationNames:
-    log_file = stationId[count] + "-retreval.log"
-    log = open(log_file, "w+")
-
-    startDate = datetime.datetime.strptime(firstReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
-    lastReading = datetime.datetime.strptime(lastReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
-    # SET LAST DATE TO GET TO CURRENT DATE
-    # ctime = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
-    # HACK TO ONLY GET THREE DAYS DATA
-    #lastReading = startDate + datetime.timedelta(days=3)
-    ctime = startDate + datetime.timedelta(days=1)
-    #lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
-    print "Getting data for ", stationNames[count]
-    print "Start date :", startDate
-    print "Last date :", lastReading
-    sys.stdout.flush()
-    while startDate < lastReading:
-        delta = datetime.timedelta(days=1)
-        endDate = startDate + delta
-        if endDate > lastReading:
-            endDate = lastReading
-        url = base_url + stationId[count] + "/"
-        params = {'startDate': startDate.strftime(
-            "%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}
-        filename = stationId[count] + "_" + \
-            startDate.strftime("%Y-%m-%d") + "-" + endDate.strftime("%Y-%m-%d") + ".json"
-        #print "URL: ", url
-        #print "PARAMS: ", params
-        #print "FILENAME: ", filename
-        print "Getting :", startDate, params,
-        print'.'
+        startDate = datetime.datetime.strptime(firstReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
+        lastReading = datetime.datetime.strptime(lastReading[count], '%Y-%m-%dT%H:%M:%S.000Z').date()
+        # SET LAST DATE TO GET TO CURRENT DATE
+        # ctime = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z')
+        # HACK TO ONLY GET THREE DAYS DATA
+        #lastReading = startDate + datetime.timedelta(days=3)
+        ctime = startDate + datetime.timedelta(days=1)
+        #lastReading = datetime.datetime.strptime(ctime, '%Y-%m-%dT%H:%M:%S.000Z').date()
+        print "Getting data for ", stationNames[count]
+        print "Start date :", startDate
+        print "Last date :", lastReading
         sys.stdout.flush()
-        data = apiRequest(url, params)
-        # Remove HTTP Status Key
-        del data["status"]
-        #print json.dumps(data, sort_keys=True, indent=4)
-        with open(filename, 'w') as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4,
-                      ensure_ascii=False)
-        logLine = "Written :" + filename + "\n"
-        log.write(logLine)
-        startDate = endDate
-    count = count + 1
-    log.close()
+        while startDate < lastReading:
+            delta = datetime.timedelta(days=1)
+            endDate = startDate + delta
+            if endDate > lastReading:
+                endDate = lastReading
+            url = base_url + stationId[count] + "/"
+            params = {'startDate': startDate.strftime(
+                "%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}
+            filename = stationId[count] + "_" + \
+                startDate.strftime("%Y-%m-%d") + "-" + endDate.strftime("%Y-%m-%d") + ".json"
+            #print "URL: ", url
+            #print "PARAMS: ", params
+            #print "FILENAME: ", filename
+            print "Getting :", startDate, params,
+            print'.'
+            sys.stdout.flush()
+            data = apiRequest(url, params)
+            # Remove HTTP Status Key
+            del data["status"]
+            #print json.dumps(data, sort_keys=True, indent=4)
+            with open(filename, 'w') as outfile:
+                json.dump(data, outfile, sort_keys=True, indent=4,
+                          ensure_ascii=False)
+            logLine = "Written :" + filename + "\n"
+            log.write(logLine)
+            startDate = endDate
+        count = count + 1
+        log.close()
+
+filename = "TA00273.tmp.json"
+with open('TA00273.last', 'r') as myfile:
+  lastDate = myfile.read().replace('\n', '')
+startDate = datetime.strptime(lastDate, '%Y-%m-%d %H:%M:%S')
+startDate = startDate.strftime('%Y-%m-%dT%H:%M:%S')
+now = datetime.now()
+#convert to utc
+local = pytz.timezone ("Africa/Nairobi")
+local_dt = local.localize(now, is_dst=None)
+now = local_dt.astimezone(pytz.utc)
+endDate =  now.strftime('%Y-%m-%dT%H:%M:%S')
+params = {'startDate': startDate, 'endDate': endDate}
+base_url = base_url + "TA00273/"
+print startDate
+print endDate
+print base_url
+print params
+data = apiRequest(base_url, params)
+del data["status"]
+with open(filename, 'w') as outfile:
+    json.dump(data, outfile, sort_keys=True, indent=4,
+              ensure_ascii=False)
+
+stationDataFile = "stations.json"
+with open(stationDataFile) as f:
+    data = json.load(f)
+print "Length :",len(data)
+print "Keys: ", data.keys()

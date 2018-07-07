@@ -74,14 +74,6 @@ def convertToUnixTimeStamp(date):
 #    json.dump(response, outfile, sort_keys=True, indent=4,ensure_ascii=False)
 
 
-
-with open(stationFile) as f:
-    data = json.load(f)
-del data["status"]
-print "Length :",len(data)
-print "Keys: ", data.keys()
-#print "Keys: ", data["stations"].keys()
-
 def putDataInfoMysql():
 
     sqlConnection = my.connect(host= "amina.uhurulabs.org",
@@ -115,3 +107,10 @@ def putDataInfoMysql():
             print e
             sqlConnection.rollback()
     sqlConnection.close ()
+
+
+with open(stationFile) as f:
+    data = json.load(f)
+print "Length :",len(data)
+print "Keys: ", data.keys()
+#print "Keys: ", data["stations"].keys()
